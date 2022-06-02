@@ -3,7 +3,7 @@ const app = express();
 const fs = require("fs");
 const port = 1290;
 require('dotenv').config();
-var net = require('net');
+const { tcpPingPort } = require("tcp-ping-port")
 const { MongoClient } = require("mongodb");
 const URI = `mongodb://muumi:${process.env.MONGO_PASSWORD}@192.168.0.13:27017/?authMechanism=DEFAULT`;
 const client = new MongoClient(URI);
@@ -40,6 +40,7 @@ app.get("/stats", async (req, res) => {
             const guildCount = await client.db("EdgyLoba").collection("guilds").countDocuments();
             const historyCount = await client.db("EdgyLoba").collection("userHistory").countDocuments();
             const users = await client.db("EdgyLoba").collection("users").find({}).toArray();
+            const analytics = await client.db("EdgyLoba").admin().serverStatus();
 
             let averageRP = 0;
             let averageAP = 0;
@@ -56,9 +57,24 @@ app.get("/stats", async (req, res) => {
 
             res.send({
                   DB: {
-                        userCount: userCount,
-                        guildCount: guildCount,
-                        historyCount: historyCount,
+                        analytics: {
+                              uptime: analytics.uptime,
+                              connections: {
+                                    current: analytics.connections.current,
+                                    active: analytics.connections.active,
+                              },
+                              network: {
+                                    bytesIn: analytics.network.bytesIn,
+                                    bytesOut: analytics.network.bytesOut,
+                                    numRequests: analytics.network.numRequests,
+                              },
+                              memory: analytics.tcmalloc.generic
+                        },
+                        counts: {
+                              userCount: userCount,
+                              guildCount: guildCount,
+                              historyCount: historyCount,
+                        },
                         users: {
                               averageRP: averageRP,
                               averageAP: averageAP,
@@ -71,26 +87,33 @@ app.get("/stats", async (req, res) => {
 	}
 })
 
-app.get("/status", (req, res) => {
-      let website = false, backend = false, bot = false, db = false;
-
-      var hosts = [["webserver", 'localhost', 8080, false], ["backend", 'localhost', 1290, false], ["db", '192.168.0.13', 27017, false]];
-      hosts.forEach(function(item) {
-          var sock = new net.Socket();
-          sock.setTimeout(2500);
-          sock.on('connect', function() {
-              console.log(item[1]+':'+item[2]+' is up.');
-              item[3] = true;
-              sock.destroy();
-          }).on('error', function(e) {
-              console.log(item[1]+':'+item[2]+' is down: ' + e.message);
-          }).on('timeout', function(e) {
-              console.log(item[1]+':'+item[2]+' is down: timeout');
-          }).connect(item[2], item[1]);
+app.get("/status", async (req, res) => {
+      let website = "offline", backend = "offline", bot = "offline", db = "offline";
+      
+      await tcpPingPort("192.168.0.14", 8080).then(online => {
+            if (online.online) {
+                  website = "online";
+            }
       });
 
-      console.log(hosts[0][3])
-      
+      await tcpPingPort("192.168.0.14", 1290).then(online => {
+            if (online.online) {
+                  backend = "online";
+            }
+      });
+
+      await tcpPingPort("192.168.0.13", 27017).then(online => {
+            if (online.online) {
+                  db = "online";
+            }
+      });
+
+      res.send({
+            website: website,
+            backend: backend,
+            bot: bot,
+            db: db,
+      })
 })
 
     
