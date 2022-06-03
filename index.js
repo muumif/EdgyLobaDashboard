@@ -5,7 +5,7 @@ const port = 1290;
 require('dotenv').config();
 const { tcpPingPort } = require("tcp-ping-port")
 const { MongoClient } = require("mongodb");
-const URI = `mongodb://muumi:${process.env.MONGO_PASSWORD}@192.168.0.13:27017/?authMechanism=DEFAULT`;
+const URI = `mongodb://muumi:${process.env.MONGO_PASSWORD}@${process.env.SERVER_IP}:27017/?authMechanism=DEFAULT`;
 const client = new MongoClient(URI);
 
 app.get("/logs", (req, res) => {
@@ -90,23 +90,23 @@ app.get("/stats", async (req, res) => {
 app.get("/status", async (req, res) => {
       let website = "offline", backend = "offline", bot = "offline", db = "offline";
       
-      await tcpPingPort("192.168.0.14", 8080).then(online => {
+      await tcpPingPort(process.env.SERVER_IP, 8080).then(online => {
             if (online.online) {
                   website = "online";
             }
-      });
+      }).catch(err => {website = "offline"})
 
-      await tcpPingPort("192.168.0.14", 1290).then(online => {
+      await tcpPingPort(process.env.SERVER_IP, 1290).then(online => {
             if (online.online) {
                   backend = "online";
             }
-      });
+      }).catch(err => {backend = "offline"})
 
-      await tcpPingPort("192.168.0.13", 27017).then(online => {
+      await tcpPingPort(process.env.SERVER_IP, 27017).then(online => {
             if (online.online) {
                   db = "online";
             }
-      });
+      }).catch(err => db ="offline");
 
       res.send({
             website: website,
@@ -118,5 +118,5 @@ app.get("/status", async (req, res) => {
 
     
 app.listen(port, () => {
-console.log(`Edgy-Loba API started on ${port}`)
+      console.log(`Edgy-Loba API started on ${port}`)
 })
