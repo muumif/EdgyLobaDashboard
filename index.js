@@ -90,7 +90,7 @@ app.get("/stats", async (req, res) => {
 app.get("/status", async (req, res) => {
       let website = "offline", backend = "offline", bot = "offline", db = "offline";
       
-      await tcpPingPort(process.env.SERVER_IP, 8080).then(online => {
+      await tcpPingPort(process.env.SERVER_IP, 3000).then(online => {
             if (online.online) {
                   website = "online";
             }
