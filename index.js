@@ -5,6 +5,7 @@ const port = 1290;
 require('dotenv').config();
 const { tcpPingPort } = require("tcp-ping-port")
 const { MongoClient } = require("mongodb");
+const axios = require('axios');
 const URI = `mongodb://muumi:${process.env.MONGO_PASSWORD}@${process.env.SERVER_IP}:27017/?authMechanism=DEFAULT`;
 const client = new MongoClient(URI);
 
@@ -41,6 +42,11 @@ app.get("/stats", async (req, res) => {
             const historyCount = await client.db("EdgyLoba").collection("userHistory").countDocuments();
             const users = await client.db("EdgyLoba").collection("users").find({}).toArray();
             const analytics = await client.db("EdgyLoba").admin().serverStatus();
+            const DBLData = await axios("https://dblstatistics.com/api/bots/719542118955090011", {
+                  headers: {
+                        "Authorization": `${process.env.DBL_TOKEN}`
+                  }
+            });
 
             let averageRP = 0;
             let averageAP = 0;
@@ -56,6 +62,11 @@ app.get("/stats", async (req, res) => {
             averageAP = Math.round(averageAP);
 
             res.send({
+                  DBL: {
+                        votes: DBLData.data.monthly_votes,
+                        votes_rank: DBLData.data.monthly_votes_rank,
+                        guild_rank: DBLData.data.server_count_rank
+                  },
                   DB: {
                         analytics: {
                               uptime: analytics.uptime,
@@ -82,6 +93,10 @@ app.get("/stats", async (req, res) => {
                   }
             })
 	}
+      catch (error) {
+            console.log(error);
+            res.status(404).send("Something went wrong");
+      }
 	finally {
 		await client.close();
 	}
@@ -115,7 +130,6 @@ app.get("/status", async (req, res) => {
             db: db,
       })
 })
-
     
 app.listen(port, () => {
       console.log(`Edgy-Loba API started on ${port}`)
