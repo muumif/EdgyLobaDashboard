@@ -1,16 +1,38 @@
 <!DOCTYPE html>
 <html>
   <head>
+
     <title>Edgy Loba</title>
+
     <link rel="icon" href="/favicon.ico"/>
     <link rel="stylesheet" href="/styles/style.css"/>
+
   </head>
+
   <body>
-    <ul id="logs"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
+
+    <div id="nav" class="sidenav">
+      <a href="#">Console</a>
+      <a href="#">Monitor</a>
+      <a href="#">Bot Statistics</a>
+    </div>
+
+    <div id="main">
+      <div id="status"></div> 
+
+      <ul id="logs"></ul>
+      <form id="form" action="">
+        <input id="input" list="datalist" autofocus="true"/><button>Send</button>
+        <datalist id="datalist">
+          <option value="/getlogs"></option>
+          <option value="/getstatus"></option>
+        </datalist>
+      </form>
+
+    </div>
+    
     <script src="/socket.io/socket.io.js"></script>
     <script src = "/javascript/console.js"></script>
+
   </body>
 </html>
