@@ -23,6 +23,14 @@ app.get("/console", (req, res) => {
 	res.sendFile(__dirname + "/pages/console.html");
 });
 
+app.get("/monitor", (req, res) => {
+	res.sendFile(__dirname + "/pages/monitor.html");
+});
+
+app.get("/stats", (req, res) => {
+	res.sendFile(__dirname + "/pages/stats.html");
+});
+
 io.on("connection", (socket) => {
 	console.log("A user has connected!");
 
